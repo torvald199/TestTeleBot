@@ -3,14 +3,21 @@ import telebot
 from telebot import types
 from user import UserTelegramBot
 import logging
+from info_button import INFO
 import quiz_config
 from random import randint
+import iterator
+import requests
+
+
+bot = telebot.TeleBot(config.TOKEN)
 
 logging.basicConfig(filename='app_log.log', filemode='a', format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                     datefmt='%d-%b-%y %H:%M:%S', level=logging.INFO)
-logging.info("Start program")
 
-bot = telebot.TeleBot(config.TOKEN)
+# message for me when bot starting work
+logging.info("Start program")
+requests.post(f'https://api.telegram.org/bot{config.TOKEN}/sendMessage?chat_id={config.MY_ID}&text=Online')
 
 my_users = UserTelegramBot()
 
@@ -22,17 +29,29 @@ def welcome(message):
     :return: 'welcome message'
     """
     my_users.add_user(message.chat.id)
-    #my_users.add_point(message.chat.id)
 
-    logging.info(f"New user:{message.chat.id};{message.chat.username};{message.chat.first_name};{message.chat.last_name}")
+    logging.info(f"New user:{message.chat.id};{message.chat.username};"
+                 f"{message.chat.first_name};{message.chat.last_name}")
 
-    markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+    markup = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=2)
     item1 = types.KeyboardButton("Твой счет")
     item2 = types.KeyboardButton("Как дела?")
+    item3 = types.KeyboardButton("Начать тест")
 
-    markup.add(item1, item2)
+    # Перед релизом удалить "item4"
+    item4 = types.KeyboardButton("/start")
+
+    # Перед релизом удалить "item4"
+    markup.add(item1, item2, item3, item4)
     bot.send_message(message.chat.id,
                      "Добро пожаловать {0.first_name}!\n".format(message.from_user, bot.get_me()), reply_markup=markup)
+    bot.send_message(message.chat.id, f'{INFO}')
+
+
+
+@bot.message_handler(commands=['info'])
+def get_info(message):
+    bot.send_message(message.chat.id, INFO)
 
 
 @bot.message_handler(commands=['make_points_0'])
@@ -43,31 +62,6 @@ def point_zero(message):
     """
     my_users.zero_point(message.chat.id)
     bot.send_message(message.chat.id, f"Твой счет = {my_users.users[message.chat.id]}")
-
-
-class Quiz:
-
-    def __init__(self):
-        self.quiz_dict = quiz_config.quiz_1
-        self.true_answer = quiz_config.quiz_1_answer_1
-        self.false_answer = quiz_config.quiz_1_answer_2
-        self.i = 0
-    def zagdka1(self):
-        #for i in range(0, len(self.quiz_dict)):
-            #if randint(1, 2) == 1:
-
-                if self.i <= len(self.quiz_dict):
-                    self.i += 1
-                    markup = types.InlineKeyboardMarkup(row_width=2)
-                    item1 = types.InlineKeyboardButton(f"{self.true_answer[self.i-1]}", callback_data="point + 1")
-                    item2 = types.InlineKeyboardButton(f"{self.false_answer[self.i-1]}", callback_data="zero")
-                    markup.add(item2, item1)
-                    return bot.send_message(357720759, f'{self.quiz_dict[self.i-1]}', reply_markup=markup)
-
-                else: raise StopIteration
-
-
-
             # else:
             #     markup = types.InlineKeyboardMarkup(row_width=2)
             #     item1 = types.InlineKeyboardButton(f"{self.true_answer[i]}", callback_data="point + 1")
@@ -75,14 +69,11 @@ class Quiz:
             #     markup.add(item1, item2)
             #     bot.send_message(357720759, f'{self.quiz_dict[i]}', reply_markup=markup)
 
-
-quiz_inst = Quiz()
-quiz_inst.zagdka1()
 @bot.message_handler(commands=['quiz'])
 def quiz3(message):
     bot.send_message(message.chat.id, "1")
-    Quiz.zagdka1()
-#def quiz_start2(message):
+    bot.register_next_step_handler(message.chat.id, UserTelegramBot.zagdka1(self=message.chat.id))
+# def quiz_start2(message):
 #    for item in quiz_config.quiz_1:
 #        markup = types.InlineKeyboardMarkup(row_width=2)
 #       for ans1 in quiz_config.quiz_1_answer_1:
@@ -100,30 +91,26 @@ def quiz3(message):
 #         item2 = types.InlineKeyboardButton(f"{quiz_config.quiz_1_answer_2}", callback_data="zero")
 #         markup.add(item2, item1)
 #         bot.send_message(message.chat.id, f'{item}', reply_markup=markup)
-    #else:
-        #markup = types.InlineKeyboardMarkup(row_width=2)
-        #item1 = types.InlineKeyboardButton(f"{quiz_config.quiz_2_answer_1}", callback_data="point + 1")
-        #item2 = types.InlineKeyboardButton(f"{quiz_config.quiz_2_answer_2}", callback_data="zero")
-        #markup.add(item1, item2)
-        #bot.send_message(message.chat.id, f'{quiz_config.quiz_2}', reply_markup=markup)
+
+    # else:
+    #     markup = types.InlineKeyboardMarkup(row_width=2)
+    #     item1 = types.InlineKeyboardButton(f"{quiz_config.quiz_2_answer_1}", callback_data="point + 1")
+    #     item2 = types.InlineKeyboardButton(f"{quiz_config.quiz_2_answer_2}", callback_data="zero")
+    #     markup.add(item1, item2)
+    #     bot.send_message(message.chat.id, f'{quiz_config.quiz_2}', reply_markup=markup)
 
 
 @bot.message_handler(content_types=['text'])
 def start(message):
-    # Повторение присланого сообщения
-    # bot.send_message(message.chat.id, message.text)
-
     try:
         if message.chat.type == "private":
             if message.text == "Твой счет":
-                quiz_inst.zagdka1()
+
                 markup = types.InlineKeyboardMarkup(row_width=1)
                 item1 = types.InlineKeyboardButton("Обнулить счет", callback_data="make point zero")
 
                 markup.add(item1)
                 bot.send_message(message.chat.id, f"Твой счет = {my_users.users[message.chat.id]}", reply_markup=markup)
-
-                #my_users.add_point(message.chat.id)
 
             elif message.text == "Как дела?":
 
@@ -134,8 +121,15 @@ def start(message):
                 markup.add(item1, item2)
 
                 bot.send_message(message.chat.id, "Отлично, а твои?", reply_markup=markup)
+
+            elif message.text == "Начать тест":
+                bot.send_message(message.chat.id, f'ДОЛЖЕН НАЧАТЬСЯ ТЕСТ')
+                vopros = UserTelegramBot.zagdka1(user_id=message.chat.id)
+                next(vopros)
+                UserTelegramBot.zagdka1(message.chat.id)
             else:
                 bot.send_message(message.chat.id, 'я даже и не знаю что ответить')
+                logging.info(f'пользователь {message.chat.username} написал {message.text}')
 
     except Exception as ex:
         print(ex)
@@ -154,21 +148,16 @@ def callback_inline(call):
                 bot.send_message(call.message.chat.id, f"Твой счет = {my_users.users[call.message.chat.id]}")
             elif call.data == "point + 1":
                 my_users.add_point(call.message.chat.id)
-             #   quiz_start2()
-            #elif call.data == "zero:":
-              #  quiz_start2()
+                # next(my_users.zagdka1(call.message.chat.id))
+            elif call.data == "zero:":
+                # next(my_users.zagdka1(call.message.chat.id))
 
-
-            # remove inline buttons
-            bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text="😝)",
-                                  reply_markup=None)
+                # remove inline buttons
+                bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
+                                      text="😝)", reply_markup=None)
 
     except Exception as ex:
         print(repr(ex))
-
-
-
-
 
 
 # RUN
