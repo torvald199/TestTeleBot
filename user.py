@@ -43,5 +43,5 @@ class UserTelegramBot:
                 item1 = types.InlineKeyboardButton(f"{self.true_answer[i]}", callback_data="point + 1")
                 item2 = types.InlineKeyboardButton(f"{self.false_answer[i]}", callback_data="zero")
                 markup.add(item2, item1)
-                return bot.send_message(user_id, f'{self.quiz_dict[i]}', reply_markup=markup)
-                #yield
+                bot.send_message(user_id, f'{self.quiz_dict[i]}', reply_markup=markup)
+                yield

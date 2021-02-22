@@ -126,7 +126,6 @@ def start(message):
                 bot.send_message(message.chat.id, f'ДОЛЖЕН НАЧАТЬСЯ ТЕСТ')
                 vopros = UserTelegramBot.zagdka1(user_id=message.chat.id)
                 next(vopros)
-                UserTelegramBot.zagdka1(message.chat.id)
             else:
                 bot.send_message(message.chat.id, 'я даже и не знаю что ответить')
                 logging.info(f'пользователь {message.chat.username} написал {message.text}')
