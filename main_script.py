@@ -30,6 +30,7 @@ def welcome(message):
     """
     my_users.add_user(message.chat.id)
 
+
     logging.info(f"New user:{message.chat.id};{message.chat.username};"
                  f"{message.chat.first_name};{message.chat.last_name}")
 
@@ -124,8 +125,11 @@ def start(message):
 
             elif message.text == "Начать тест":
                 bot.send_message(message.chat.id, f'ДОЛЖЕН НАЧАТЬСЯ ТЕСТ')
-                vopros = UserTelegramBot.zagdka1(user_id=message.chat.id)
-                next(vopros)
+                my_users.add_user_step(message.chat.id)
+                my_users.zagdka1(message.chat.id)
+                # vopros = my_users.zagdka1(user_id=message.chat.id)
+                # next(vopros)
+                # next(vopros)
             else:
                 bot.send_message(message.chat.id, 'я даже и не знаю что ответить')
                 logging.info(f'пользователь {message.chat.username} написал {message.text}')
@@ -147,14 +151,22 @@ def callback_inline(call):
                 bot.send_message(call.message.chat.id, f"Твой счет = {my_users.users[call.message.chat.id]}")
             elif call.data == "point + 1":
                 my_users.add_point(call.message.chat.id)
-                # next(my_users.zagdka1(call.message.chat.id))
-            elif call.data == "zero:":
-                # next(my_users.zagdka1(call.message.chat.id))
+                my_users.add_point_step(call.message.chat.id)
+                my_users.zagdka1(call.message.chat.id)
+                #next(my_users.zagdka1(user_id=call.message.chat.id))
+            elif call.data == "zero":
+                my_users.add_point_step(call.message.chat.id)
+                my_users.zagdka1(call.message.chat.id)
+                #next(my_users.zagdka1(user_id=call.message.chat.id))
 
-                # remove inline buttons
-                bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
+            # remove inline buttons
+            bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
                                       text="😝)", reply_markup=None)
 
+    except IndexError:
+        bot.send_message(call.message.chat.id, "Тест окончен")
+        bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
+                              text="😝)", reply_markup=None)
     except Exception as ex:
         print(repr(ex))
 

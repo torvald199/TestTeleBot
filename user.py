@@ -16,6 +16,7 @@ class UserTelegramBot:
         self.true_answer = quiz_config.quiz_1_answer_1
         self.false_answer = quiz_config.quiz_1_answer_2
         self.i = 0
+        self.dict_to_step = {}
 
     # quiz_dict = iterator.QuizIterator(quiz_config.quiz_1)
     # true_answer = iterator.QuizIterator(quiz_config.quiz_1_answer_1)
@@ -26,22 +27,43 @@ class UserTelegramBot:
         if user_id not in self.users:
             self.users[user_id] = 0
 
+    def add_user_step(self, user_id):
+        if user_id not in self.dict_to_step:
+            self.dict_to_step[user_id] = 0
+
     # add 1 point for user
     def add_point(self, user_id):
         points = self.users[user_id]
         self.users[user_id] = points + 1
+
+    def add_point_step(self, user_id):
+        points = self.dict_to_step[user_id]
+        self.dict_to_step[user_id] = points + 1
 
     # make user point 0
     def zero_point(self, user_id):
         self.users[user_id] = 0
 
     def zagdka1(self, user_id):
-        for i in range(0, len(self.quiz_dict)):
+        #for i in range(0, len(self.quiz_dict)):
 
         #     if randint(1, 2) == 1:
-                markup = types.InlineKeyboardMarkup(row_width=2)
-                item1 = types.InlineKeyboardButton(f"{self.true_answer[i]}", callback_data="point + 1")
-                item2 = types.InlineKeyboardButton(f"{self.false_answer[i]}", callback_data="zero")
-                markup.add(item2, item1)
-                bot.send_message(user_id, f'{self.quiz_dict[i]}', reply_markup=markup)
-                yield
+
+        markup = types.InlineKeyboardMarkup(row_width=2)
+        item1 = types.InlineKeyboardButton(f"{self.true_answer[self.dict_to_step[user_id]]}", callback_data="point + 1")
+        item2 = types.InlineKeyboardButton(f"{self.false_answer[self.dict_to_step[user_id]]}", callback_data="zero")
+        markup.add(item2, item1)
+        return bot.send_message(user_id, f'{self.quiz_dict[self.dict_to_step[user_id]]}', reply_markup=markup)
+
+
+
+    # def zagdka1(self, user_id):
+    #     #for i in range(0, len(self.quiz_dict)):
+    #
+    #     #     if randint(1, 2) == 1:
+    #             markup = types.InlineKeyboardMarkup(row_width=2)
+    #             item1 = types.InlineKeyboardButton(f"{self.true_answer[i]}", callback_data="point + 1")
+    #             item2 = types.InlineKeyboardButton(f"{self.false_answer[i]}", callback_data="zero")
+    #             markup.add(item2, item1)
+    #             bot.send_message(user_id, f'{self.quiz_dict[i]}', reply_markup=markup)
+    #             yield
